@@ -7,14 +7,17 @@
 # Import libraries
 import pyqtgraph as pg
 import numpy as np
+
+import Math
 # Import files
 import parameters
 
 
 class Custom1DPlot(pg.PlotWidget):
-    def __init__(self, plot_color, frame_color, line1_color, line2_color, axis_color, ticks_color, text_color, x_label,
+    def __init__(self, parent, plot_color, frame_color, line1_color, line2_color, axis_color, ticks_color, text_color, x_label,
                  y_label):
         super().__init__()
+        self.parent = parent
 
         # Colors
         self.plot_color = plot_color
@@ -49,9 +52,9 @@ class Custom1DPlot(pg.PlotWidget):
 
 
 class ThetaPlot(Custom1DPlot):
-    def __init__(self, plot_color, frame_color, line1_color, line2_color, axis_color, ticks_color, text_color, x_label,
+    def __init__(self, parent, plot_color, frame_color, line1_color, line2_color, axis_color, ticks_color, text_color, x_label,
                  y_label):
-        super().__init__(plot_color=plot_color, frame_color=frame_color, line1_color=line1_color,
+        super().__init__(parent=parent, plot_color=plot_color, frame_color=frame_color, line1_color=line1_color,
                          line2_color=line2_color, axis_color=axis_color, ticks_color=ticks_color,
                          text_color=text_color, x_label=x_label, y_label=y_label)
 
@@ -69,7 +72,7 @@ class ThetaPlot(Custom1DPlot):
         self.theta = np.linspace(0, 2*np.pi, parameters.theta_res)
 
         # line 1 (with obstacles)
-        self.line1_data = np.ones(parameters.theta_res) * np.sin(2*self.theta) + 1
+        self.line1_data = Math.compute_J_with_obstacles(Math.s, Math.A) / parameters.k
         self.line1 = self.plot(self.theta, self.line1_data, pen=pg.mkPen(self.line1_color, width=2), name="with_obs")
 
         # line 2 (without obstacles)
@@ -79,3 +82,8 @@ class ThetaPlot(Custom1DPlot):
         # filling
         self.fill = pg.FillBetweenItem(self.line1, self.line2, brush=pg.mkBrush((0, 0, 255, 40)))
         self.addItem(self.fill)
+
+    def plot_line1(self):
+        Math.s = Math.compute_s(Math.a)
+        self.line1_data = Math.compute_J_with_obstacles(Math.s, Math.A) / parameters.k
+        self.line1.setData(self.theta, self.line1_data)

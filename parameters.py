@@ -13,7 +13,7 @@ radius = 5
 coordinates = []
 
 #  Wave parameter
-k = 20
+k = 2
 wave_type = "sph"  # "sph", or "pl"
 plane_wave_angle = 0
 
@@ -23,10 +23,10 @@ alpha = 1
 
 #  xy plot parameter
 scale = "log"  # "log" or "poly" or "step"
-x_res = 200
+x_res = 100
 x_min = -10
 x_max = 10
-y_res = 200
+y_res = 100
 y_min = -10
 y_max = 10
 

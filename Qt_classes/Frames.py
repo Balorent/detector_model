@@ -14,6 +14,7 @@ from Qt_classes import Plots2D as myPlots2D
 class CustomFrame(QtWidgets.QFrame):
     def __init__(self, parent, pos, width, height, color, layout, spacing, margins, shape, shadow):
         super().__init__(parent=parent)
+        self.parent = parent
 
         # Dimensions
         self.width = width
@@ -74,8 +75,8 @@ class XYFrame(CustomFrame):
                                       layout=QtWidgets.QHBoxLayout(), spacing=0, margins=[0, 0, 0, 0],
                                       shape=None, shadow=None)
         self.layout().addWidget(self.plot_frame)
-        self.graph = myPlots2D.XYPlot(plot_color='k', frame_color='transparent', axis_color='k', ticks_color='w',
-                                      text_color='k', x_label='x', y_label='y')
+        self.graph = myPlots2D.XYPlot(parent=self, plot_color='k', frame_color='transparent', axis_color='k',
+                                      ticks_color='w', text_color='k', x_label='x', y_label='y')
         self.plot_frame.layout().addWidget(self.graph.image_view)
 
     def update_size(self, pos, width, height):
@@ -104,9 +105,9 @@ class ThetaFrame(CustomFrame):
                                       layout=QtWidgets.QHBoxLayout(), spacing=0, margins=[0, 0, 0, 0],
                                       shape=None, shadow=None)
         self.layout().addWidget(self.plot_frame)
-        self.graph = myPlots1D.ThetaPlot(plot_color='w', frame_color="transparent", line1_color='b', line2_color='r',
-                                         axis_color='k', ticks_color='k', text_color='k', x_label="\u03B8 [rad]",
-                                         y_label="J(\u03B8) [k]")
+        self.graph = myPlots1D.ThetaPlot(parent=self, plot_color='w', frame_color="transparent", line1_color='b',
+                                         line2_color='r', axis_color='k', ticks_color='k', text_color='k',
+                                         x_label="\u03B8 [rad]", y_label="J(\u03B8) [k]")
         self.plot_frame.layout().addWidget(self.graph)
 
     def update_size(self, pos, width, height):
