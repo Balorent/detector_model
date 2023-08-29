@@ -71,13 +71,13 @@ class ThetaPlot(Custom1DPlot):
         # theta
         self.theta = np.linspace(0, 2*np.pi, parameters.theta_res)
 
-        # line 1 (with obstacles)
-        self.line1_data = Math.compute_J_with_obstacles(Math.s, Math.A) / parameters.k
-        self.line1 = self.plot(self.theta, self.line1_data, pen=pg.mkPen(self.line1_color, width=2), name="with_obs")
-
         # line 2 (without obstacles)
         self.line2_data = np.ones(parameters.theta_res)
-        self.line2 = self.plot(self.theta, self.line2_data, pen=pg.mkPen(self.line2_color, width=2), name="without_obs")
+        self.line2 = self.plot(self.theta, self.line2_data, pen=pg.mkPen(self.line2_color, width=2), name="without_obs", antialias=1)
+
+        # line 1 (with obstacles)
+        self.line1_data = Math.compute_J_with_obstacles(Math.s, Math.A) / parameters.k
+        self.line1 = self.plot(self.theta, self.line1_data, pen=pg.mkPen(self.line1_color, width=2), name="with_obs", antialias=1)
 
         # filling
         self.fill = pg.FillBetweenItem(self.line1, self.line2, brush=pg.mkBrush((0, 0, 255, 40)))

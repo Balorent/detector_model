@@ -8,7 +8,12 @@ A = 0
 
 
 def green(k, r):
-    return -1/(2*np.pi) * scipy.special.kv(0, -1j*k*r)
+    approx = False
+    if approx:
+        res = np.ones(np.shape(r), dtype=complex)
+    else:
+        res = -1/(2*np.pi) * scipy.special.kv(0, -1j*k*r)
+    return res
 
 
 def plane_wave(x, y, k, angle):
@@ -86,10 +91,7 @@ def compute_psi(x, y, update):
         update_math()
     k = parameters.k
     N = parameters.N
-    coordinates = []
-    for i in range(N):
-        coordinates.append(
-            [parameters.coordinates[i][0], parameters.coordinates[i][1]])
+    coordinates = np.array(parameters.coordinates)
     wave_type = parameters.wave_type
     psi = 0
     if wave_type == "sph":

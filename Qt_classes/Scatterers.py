@@ -20,14 +20,14 @@ class Scatterers(pg.ScatterPlotItem):
         self.normal_brush_color = 'w'
         self.highlighted_brush_color = 'k'
         self.selected_brush_color = 'r'
-        self.brush = [self.normal_brush_color for i in range(parameters.N)]
+        self.brush = np.array([self.normal_brush_color for i in range(parameters.N)])
         self.setBrush(self.brush)
 
         # Pen
         self.normal_pen_color = 'k'
         self.highlighted_pen_color = 'w'
         self.selected_pen_color = 'w'
-        self.pen = [self.normal_pen_color for i in range(parameters.N)]
+        self.pen = np.array([self.normal_pen_color for i in range(parameters.N)])
         self.setPen(self.pen)
 
         # Size
@@ -37,43 +37,43 @@ class Scatterers(pg.ScatterPlotItem):
         # Snip distance
         self.snip_dist = (parameters.x_max - parameters.x_min) / 75
 
-        # Lists
-        self.highlighted = [False for i in range(parameters.N)]
-        self.selected = [False for i in range(parameters.N)]
+        # State : 0=normal ; 1=highlighted ; 2=selected
+        self.state = np.array([0 for i in range(parameters.N)])
 
-        # Movement
-        self.on_move = False
+        # Momentum
+        self.momentum = np.random.random((parameters.N, 2)) * 0.1
 
-    def highlight(self, i):
-        self.brush[i] = self.highlighted_brush_color
+    def update_color(self):
+        self.brush = np.select([self.state == 0,         self.state == 1,              self.state == 2],
+                               [self.normal_brush_color, self.highlighted_brush_color, self.selected_brush_color])
         self.setBrush(self.brush)
-        self.pen[i] = self.highlighted_pen_color
+        self.pen = np.select([self.state == 0,       self.state == 1,            self.state == 2],
+                             [self.normal_pen_color, self.highlighted_pen_color, self.selected_pen_color])
         self.setPen(self.pen)
-        self.highlighted[i] = True
 
-    def unhighlight(self, i):
-        self.brush[i] = self.normal_brush_color
+    def add_scatterer(self):
+        self.setData(pos=parameters.coordinates)
+        self.brush = np.append(self.brush, self.normal_brush_color)
         self.setBrush(self.brush)
-        self.pen[i] = self.normal_pen_color
+        self.pen = np.append(self.pen, self.normal_pen_color)
         self.setPen(self.pen)
-        self.highlighted[i] = False
+        self.state = np.append(self.state, 0)
+        self.momentum = np.append(self.momentum, np.random.random((1, 2)) * 0.1)
 
-    def is_highlighted(self, i):
-        return self.highlighted[i]
-
-    def select(self, i):
-        self.brush[i] = self.selected_brush_color
+    def remove_scatterer(self, index):
+        self.setData(pos=parameters.coordinates)
+        self.brush = np.delete(self.brush, index)
         self.setBrush(self.brush)
-        self.pen[i] = self.selected_pen_color
+        self.pen = np.delete(self.pen, index)
         self.setPen(self.pen)
-        self.selected[i] = True
+        self.state = np.delete(self.state, index)
+        self.momentum = np.delete(self.momentum, index)
 
-    def deselect(self, i):
-        self.brush[i] = self.normal_brush_color
+    def remove_all_scatterers(self):
+        self.setData(pos=parameters.coordinates)
+        self.brush = np.zeros(0)
         self.setBrush(self.brush)
-        self.pen[i] = self.normal_pen_color
+        self.pen = np.zeros(0)
         self.setPen(self.pen)
-        self.selected[i] = False
-
-    def is_selected(self, i):
-        return self.selected[i]
+        self.state = np.zeros(0)
+        self.momentum = np.zeros((0, 2))

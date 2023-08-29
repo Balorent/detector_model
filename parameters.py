@@ -8,7 +8,7 @@
 # Import files
 
 #  Gas parameter
-N = 10
+N = 1
 radius = 5
 coordinates = []
 

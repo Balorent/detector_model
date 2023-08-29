@@ -6,9 +6,14 @@
 
 # Import libraries
 from PyQt5 import QtWidgets, QtCore
+from functools import partial
+import numpy as np
 # Import files
 from Qt_classes import Plots1D as myPlots1D
 from Qt_classes import Plots2D as myPlots2D
+from Qt_classes import Buttons as myButtons
+from Qt_classes import Sliders as mySliders
+from Controller import buttons_controller as Bcontrol
 
 
 class CustomFrame(QtWidgets.QFrame):
@@ -49,11 +54,111 @@ class CustomFrame(QtWidgets.QFrame):
         self.setGeometry(self.pos[0], self.pos[1], self.width, self.height)
 
 
+class TitleFrame(CustomFrame):
+    def __init__(self, parent, pos, width, height, color, title_text, font_size):
+        super().__init__(parent=parent, pos=pos, width=width, height=height, color=color,
+                         layout=QtWidgets.QVBoxLayout(), spacing=0, margins=[0, 0, 0, 0],
+                         shape=None, shadow=None)
+        self.layout().setAlignment(QtCore.Qt.AlignTop)
+        self.layout().setSpacing(5)
+
+        # Title
+        self.title_text = title_text
+        self.font_size = font_size
+        self.title_label = QtWidgets.QLabel(self)
+        self.title_label.setText(self.title_text)
+        self.title_label.setStyleSheet("font-weight: bold; font-size: " + str(self.font_size) + "pt;")
+        self.layout().addWidget(self.title_label, alignment=QtCore.Qt.AlignCenter)
+
+        # Content
+        self.content_frame = CustomFrame(parent=self, pos=[0, 0], width=self.width,
+                                         height=self.height-self.font_size-10, color='transparent',
+                                         layout=QtWidgets.QGridLayout(), spacing=0, margins=[0, 0, 0, 0],
+                                         shape=None, shadow=None)
+        self.content_frame.setFixedHeight(self.content_frame.height)
+        self.content_frame.setFixedWidth(self.content_frame.width)
+        self.layout().addWidget(self.content_frame)
+
+    def add_widget(self, widget, row, col):
+        self.content_frame.layout().addWidget(widget, row, col)
+
+
+class SeparatorFrame(CustomFrame):
+    def __init__(self, parent, pos, width, height, color):
+        super().__init__(parent=parent, pos=pos, width=width, height=height, color=color,
+                         layout=QtWidgets.QVBoxLayout(), spacing=0, margins=[0, 0, 0, 0],
+                         shape=QtWidgets.QFrame.VLine, shadow=None)
+        self.setStyleSheet('QFrame {color : ' + color + '}')
+
+
 class OptionFrame(CustomFrame):
     def __init__(self, parent, pos, width, height, color):
         super().__init__(parent=parent, pos=pos, width=width, height=height, color=color,
                          layout=QtWidgets.QHBoxLayout(), spacing=0, margins=[0, 0, 0, 0],
                          shape=QtWidgets.QFrame.StyledPanel, shadow=QtWidgets.QFrame.Sunken)
+        self.layout().setAlignment(QtCore.Qt.AlignLeft)
+
+        # -------------- Scatterers options --------------
+        self.scatterer_options_frame = TitleFrame(parent=self, pos=[0, 0], width=500, height=self.height,
+                                                  color='transparent', title_text="Scatterers options", font_size=9)
+        self.scatterer_options_frame.setFixedWidth(self.scatterer_options_frame.width)
+        self.layout().addWidget(self.scatterer_options_frame)
+        # Add button
+        self.add_button = myButtons.CustomButton(parent=self, pos=[0, 0], width=75, height=28, text="Add",
+                                                 color='light grey', hover_color='grey')
+        self.scatterer_options_frame.add_widget(widget=self.add_button, row=0, col=0)
+        self.add_button.clicked.connect(partial(Bcontrol.add_random, parent, 1))
+        # Remove all button
+        self.remove_all_button = myButtons.CustomButton(parent=self, pos=[0, 0], width=75, height=28,
+                                                        text="Remove all", color='light grey', hover_color='grey')
+        self.scatterer_options_frame.add_widget(widget=self.remove_all_button, row=1, col=0)
+        self.remove_all_button.clicked.connect(partial(Bcontrol.remove_all, parent))
+        # X slider
+        self.x_slider = mySliders.CustomSlider(parent=self, pos=[0, 0], width=200, height=40, title_text='x',
+                                               font_size=9, val_min=-10, val_max=10, steps=2000, slider_width=100,
+                                               slider_height=20)
+        self.scatterer_options_frame.add_widget(widget=self.x_slider, row=0, col=1)
+        # Y slider
+        self.y_slider = mySliders.CustomSlider(parent=self, pos=[0, 0], width=200, height=40, title_text='y',
+                                               font_size=9, val_min=-10, val_max=10, steps=2000, slider_width=100,
+                                               slider_height=20)
+        self.scatterer_options_frame.add_widget(widget=self.y_slider, row=1, col=1)
+        # R slider
+        self.r_slider = mySliders.CustomSlider(parent=self, pos=[0, 0], width=200, height=40, title_text='r',
+                                               font_size=9, val_min=0, val_max=10, steps=2000, slider_width=100,
+                                               slider_height=20)
+        self.scatterer_options_frame.add_widget(widget=self.r_slider, row=0, col=2)
+        # Theta slider
+        self.theta_slider = mySliders.CustomSlider(parent=self, pos=[0, 0], width=200, height=40, title_text='\u03B8',
+                                                   font_size=9, val_min=0, val_max=2*np.pi, steps=2000,
+                                                   slider_width=100, slider_height=20)
+        self.scatterer_options_frame.add_widget(widget=self.theta_slider, row=1, col=2)
+        # Separator
+        self.scatterer_options_sep = SeparatorFrame(parent=self, pos=[0, 0], width=1, height=self.height,
+                                                    color='grey')
+        self.scatterer_options_sep.setFixedWidth(self.scatterer_options_sep.width)
+        self.layout().addWidget(self.scatterer_options_sep)
+
+        # -------------- Wave options --------------
+        self.wave_options_frame = TitleFrame(parent=self, pos=[0, 0], width=200, height=self.height,
+                                             color='transparent', title_text="Wave options", font_size=9)
+        self.wave_options_frame.setFixedWidth(self.wave_options_frame.width)
+        self.layout().addWidget(self.wave_options_frame)
+        # k slider
+        self.k_slider = mySliders.CustomSlider(parent=self, pos=[0, 0], width=200, height=40, title_text='k',
+                                               font_size=9, val_min=0, val_max=10, steps=2000, slider_width=100,
+                                               slider_height=20)
+        self.wave_options_frame.add_widget(widget=self.k_slider, row=0, col=0)
+        # lambda slider
+        self.lambda_slider = mySliders.CustomSlider(parent=self, pos=[0, 0], width=200, height=40, title_text='\u03BB',
+                                                    font_size=9, val_min=0, val_max=10, steps=2000, slider_width=100,
+                                                    slider_height=20)
+        self.wave_options_frame.add_widget(widget=self.lambda_slider, row=1, col=0)
+        # Separator
+        self.wave_options_sep = SeparatorFrame(parent=self, pos=[0, 0], width=1, height=self.height,
+                                                    color='grey')
+        self.wave_options_sep.setFixedWidth(self.wave_options_sep.width)
+        self.layout().addWidget(self.wave_options_sep)
 
 
 class XYFrame(CustomFrame):

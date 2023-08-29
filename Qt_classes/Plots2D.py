@@ -19,7 +19,7 @@ class Custom2DPlot(pg.PlotItem):
     def __init__(self, parent, plot_color, frame_color, axis_color, ticks_color, text_color, x_label, y_label, x_min, x_max, x_res,
                  y_min, y_max, y_res):
         super().__init__()
-        self.parent=parent
+        self.parent = parent
 
         # Colors
         self.plot_color = plot_color
@@ -92,15 +92,18 @@ class XYPlot(Custom2DPlot):
                          y_max=parameters.y_max, y_res=parameters.y_res)
 
         # Data
-        self.data = np.log(np.abs(Math.compute_psi(self.mesh[1], self.mesh[0], False)))
-        self.image_view.setImage(self.data,
-                                 pos=(self.x_min, self.y_min),
-                                 scale=((self.x_max - self.x_min) / self.x_res, (self.y_max - self.y_min) / self.y_res),
-                                 autoRange=False)
+        self.data = None
+        self.plot_2d(update=False, autoRange=False, autoLevels=True)
+        self.getViewBox().invertY(False)
 
         # Scatterers
         self.scatterers = myScatterers.Scatterers(parameters.coordinates)
         self.addItem(self.scatterers)
+
+        # Detector volume
+        self.detector_line = self.plot(parameters.radius * np.cos(np.linspace(0, 2*np.pi, 200)),
+                                       parameters.radius * np.sin(np.linspace(0, 2*np.pi, 200)),
+                                       pen=pg.mkPen('k', width=.5), antialias=1)
 
         # color_bar
         self.color_bar = self.image_view.ui.histogram
@@ -110,51 +113,61 @@ class XYPlot(Custom2DPlot):
         self.custom_color_map = pg.ColorMap(np.linspace(0, 1, len(self.custom_colors)), self.custom_colors)
         self.color_bar.gradient.setColorMap(self.custom_color_map)
 
-        # Connect signals
-        self.getViewBox().scene().sigMouseMoved.connect(self.mouse_moved)
-        self.getViewBox().scene().sigMouseClicked.connect(self.mouse_clicked)
+        # Movement
+        self.on_move = True
 
-    def mouse_moved(self, event):
-        pos = self.mapToView(event)  # Get position of mouse
-        x, y = pos.x(), pos.y()
-        for (i, [xi, yi]) in enumerate(parameters.coordinates):
-            if not self.scatterers.is_selected(i):
-                if np.sqrt((xi - x) ** 2 + (yi - y) ** 2) < self.scatterers.snip_dist:
-                    if not self.scatterers.is_highlighted(i):
-                        self.scatterers.highlight(i)
-                elif self.scatterers.is_highlighted(i):
-                    self.scatterers.unhighlight(i)
-            elif self.scatterers.is_selected(i):
-                parameters.coordinates[i] = [x, y]
-                self.scatterers.setData(pos=parameters.coordinates,
-                                        brush=self.scatterers.brush,
-                                        pen=self.scatterers.pen)
-                self.data = np.log(np.abs(Math.compute_psi(self.mesh[1], self.mesh[0], True)))
-                self.image_view.setImage(self.data,
-                                         pos=(self.x_min, self.y_min),
-                                         scale=((self.x_max - self.x_min) / self.x_res,
-                                                (self.y_max - self.y_min) / self.y_res),
-                                         autoRange=False, autoLevels=False)
-                self.parent.parent.Theta_frame.graph.plot_line1()
+    def hoverEvent(self, event):
+        try:  # Move a selected scatterer
+            if event.buttons() == QtCore.Qt.LeftButton and np.any(self.scatterers.state == 2):
+                pos = self.mapToView(event.pos()).x(), self.mapToView(event.pos()).y()
+                selected_index = np.where(self.scatterers.state == 2)[0][0]
+                if self.on_move:
+                    self.on_move = True
+                    parameters.coordinates[selected_index] = pos
+                    self.scatterers.setData(pos=parameters.coordinates,
+                                            brush=self.scatterers.brush,
+                                            pen=self.scatterers.pen)
+                    self.plot_2d(update=True, autoRange=False, autoLevels=False)
+                    self.parent.parent.Theta_frame.graph.plot_line1()
+            elif len(parameters.coordinates):  # Highlighting
+                pos = self.mapToView(event.pos()).x(), self.mapToView(event.pos()).y()
+                dist = np.sqrt(np.sum((np.array(parameters.coordinates) - pos)**2, axis=1))
+                highlight_index = []
+                if np.min(dist) < self.scatterers.snip_dist:
+                    highlight_index = np.max(np.where(dist < self.scatterers.snip_dist)[0])
+                    if not self.scatterers.state[highlight_index]:
+                        self.scatterers.state[highlight_index] = 1
+                unhighlight_index = np.delete(np.array(range(len(parameters.coordinates))), highlight_index)
+                self.scatterers.state[unhighlight_index] = (self.scatterers.state[unhighlight_index] == 1) * 0 + \
+                                                           (self.scatterers.state[unhighlight_index] == 2) * 2
+                self.scatterers.update_color()
+        except AttributeError:
+            pass
 
-    def mouse_clicked(self, event):
-        for (i, [xi, yi]) in enumerate(parameters.coordinates):
-            if self.scatterers.is_highlighted(i):
-                if not self.scatterers.is_selected(i):
-                    self.scatterers.unhighlight(i)
-                    self.scatterers.select(i)
-            elif self.scatterers.is_selected(i):
-                self.scatterers.deselect(i)
+    def mousePressEvent(self, event):
+        pos = self.mapToView(event.pos()).x(), self.mapToView(event.pos()).y()
+        on_choose = (self.scatterers.state == 1) or (self.scatterers.state == 2
+                                                     and np.sqrt(np.sum((np.array(parameters.coordinates) - pos)**2,
+                                                                        axis=1))
+                                                     [np.where(self.scatterers.state == 2)[0][0]]
+                                                     < self.scatterers.snip_dist)
+        self.scatterers.state = np.zeros(parameters.N) + on_choose * 2
+        self.scatterers.update_color()
+        if not np.any(on_choose):
+            super().mousePressEvent(event)
 
     def range_changed(self, event):
         super().range_changed(event)
-        self.data = np.log(np.abs(Math.compute_psi(self.mesh[1], self.mesh[0], False)))
-        self.image_view.setImage(self.data,
-                                 pos=(self.x_min, self.y_min),
-                                 scale=((self.x_max - self.x_min) / self.x_res, (self.y_max - self.y_min) / self.y_res),
-                                 autoRange=False, autoLevels=False)
+        self.plot_2d(update=False, autoRange=False, autoLevels=False)
         parameters.x_min = self.x_min
         parameters.x_max = self.x_max
         parameters.y_min = self.y_min
         parameters.y_max = self.y_max
         self.scatterers.snip_dist = (parameters.x_max - parameters.x_min) / 75
+
+    def plot_2d(self, update, autoRange, autoLevels):
+        self.data = np.log(np.abs(Math.compute_psi(self.mesh[1], self.mesh[0], update)))
+        self.image_view.setImage(self.data,
+                                 pos=(self.x_min, self.y_min),
+                                 scale=((self.x_max - self.x_min) / self.x_res, (self.y_max - self.y_min) / self.y_res),
+                                 autoRange=autoRange, autoLevels=autoLevels)
