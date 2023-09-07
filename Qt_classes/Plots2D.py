@@ -146,11 +146,10 @@ class XYPlot(Custom2DPlot):
 
     def mousePressEvent(self, event):
         pos = self.mapToView(event.pos()).x(), self.mapToView(event.pos()).y()
-        on_choose = (self.scatterers.state == 1) or (self.scatterers.state == 2
-                                                     and np.sqrt(np.sum((np.array(parameters.coordinates) - pos)**2,
-                                                                        axis=1))
-                                                     [np.where(self.scatterers.state == 2)[0][0]]
-                                                     < self.scatterers.snip_dist)
+        selected_ind = np.where(self.scatterers.state == 2)[0]
+        on_choose = (self.scatterers.state == 1)
+        if len(selected_ind):
+            on_choose += ((self.scatterers.state == 2) * (np.sqrt(np.sum((np.array(parameters.coordinates) - pos)**2, axis=1))[selected_ind[0]] < self.scatterers.snip_dist))
         self.scatterers.state = np.zeros(parameters.N) + on_choose * 2
         self.scatterers.update_color()
         if not np.any(on_choose):

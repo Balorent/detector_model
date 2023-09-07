@@ -48,6 +48,7 @@ class Custom1DPlot(pg.PlotWidget):
         # Grid
         self.addItem(pg.InfiniteLine(pos=0, angle=90, pen=pg.mkPen(self.axis_color, width=0.75)))
         self.addItem(pg.InfiniteLine(pos=0, angle=0, pen=pg.mkPen(self.axis_color, width=0.75)))
+        self.addItem(pg.InfiniteLine(pos=2*np.pi, angle=90, pen=pg.mkPen(self.axis_color, width=0.75)))
         self.showGrid(x=True, y=True, alpha=0.1)
 
 
@@ -66,7 +67,6 @@ class ThetaPlot(Custom1DPlot):
         self.getAxis('top').setTicks([self.ticks, []])
         self.setMouseEnabled(x=False, y=True)
         self.setXRange(0, 2*np.pi)
-        self.addItem(pg.InfiniteLine(pos=2*np.pi, angle=90, pen=pg.mkPen(self.axis_color, width=0.75)))
 
         # theta
         self.theta = np.linspace(0, 2*np.pi, parameters.theta_res)
@@ -87,3 +87,11 @@ class ThetaPlot(Custom1DPlot):
         Math.s = Math.compute_s(Math.a)
         self.line1_data = Math.compute_J_with_obstacles(Math.s, Math.A) / parameters.k
         self.line1.setData(self.theta, self.line1_data)
+
+
+class DirectionalityPlot(Custom1DPlot):
+    def __init__(self, parent, plot_color, frame_color, line1_color, line2_color, axis_color, ticks_color, text_color, x_label,
+                 y_label):
+        super().__init__(parent=parent, plot_color=plot_color, frame_color=frame_color, line1_color=line1_color,
+                         line2_color=line2_color, axis_color=axis_color, ticks_color=ticks_color,
+                         text_color=text_color, x_label=x_label, y_label=y_label)

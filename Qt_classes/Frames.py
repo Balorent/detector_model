@@ -10,6 +10,7 @@ from functools import partial
 import numpy as np
 # Import files
 from Qt_classes import Plots1D as myPlots1D
+from Qt_classes import PolarPlots as myPolarPlots
 from Qt_classes import Plots2D as myPlots2D
 from Qt_classes import Buttons as myButtons
 from Qt_classes import Sliders as mySliders
@@ -83,6 +84,34 @@ class TitleFrame(CustomFrame):
         self.content_frame.layout().addWidget(widget, row, col)
 
 
+class MainFrame(CustomFrame):
+    def __init__(self, parent, pos, width, height, color, layout, spacing, margins, shape, shadow, title_text,
+                 font_size):
+        super().__init__(parent=parent, pos=pos, width=width, height=height, color=color,
+                         layout=layout, spacing=spacing, margins=margins, shape=shape, shadow=shadow)
+        self.title_frame = CustomFrame(parent=self, pos=(0, 0), width=self.width, height=15, color='#c4c4c4',
+                                       layout=QtWidgets.QHBoxLayout(), spacing=0, margins=[0, 0, 0, 0],
+                                       shape=QtWidgets.QFrame.StyledPanel, shadow=None)
+
+        # Title
+        self.title_text = title_text
+        self.font_size = font_size
+        self.title_label = QtWidgets.QLabel(self)
+        self.title_label.setText(self.title_text)
+        self.title_label.setStyleSheet("font-size: " + str(self.font_size) + "pt;")
+        self.title_frame.layout().addWidget(self.title_label, alignment=QtCore.Qt.AlignLeft)
+
+        # Button
+        self.menu_button = myButtons.CustomButton(parent=self.title_frame, pos=(0, 0), width=self.title_frame.height,
+                                                  height=self.title_frame.height, text='▼', font_size=10,
+                                                  color='transparent', hover_color='blue')
+        self.title_frame.layout().addWidget(self.menu_button, alignment=QtCore.Qt.AlignRight)
+
+    def update_size(self, pos, width, height):
+        super().update_size(pos, width, height)
+        self.title_frame.update_size(pos=[0, 0], width=self.width, height=self.title_frame.height)
+
+
 class SeparatorFrame(CustomFrame):
     def __init__(self, parent, pos, width, height, color):
         super().__init__(parent=parent, pos=pos, width=width, height=height, color=color,
@@ -105,12 +134,13 @@ class OptionFrame(CustomFrame):
         self.layout().addWidget(self.scatterer_options_frame)
         # Add button
         self.add_button = myButtons.CustomButton(parent=self, pos=[0, 0], width=75, height=28, text="Add",
-                                                 color='light grey', hover_color='grey')
+                                                 font_size=10, color='light grey', hover_color='grey')
         self.scatterer_options_frame.add_widget(widget=self.add_button, row=0, col=0)
         self.add_button.clicked.connect(partial(Bcontrol.add_random, parent, 1))
         # Remove all button
         self.remove_all_button = myButtons.CustomButton(parent=self, pos=[0, 0], width=75, height=28,
-                                                        text="Remove all", color='light grey', hover_color='grey')
+                                                        text="Remove all", font_size=10, color='light grey',
+                                                        hover_color='grey')
         self.scatterer_options_frame.add_widget(widget=self.remove_all_button, row=1, col=0)
         self.remove_all_button.clicked.connect(partial(Bcontrol.remove_all, parent))
         # X slider
@@ -161,11 +191,20 @@ class OptionFrame(CustomFrame):
         self.layout().addWidget(self.wave_options_sep)
 
 
-class XYFrame(CustomFrame):
+class ObstacleFrame(MainFrame):
     def __init__(self, parent, pos, width, height, color):
         super().__init__(parent=parent, pos=pos, width=width, height=height, color=color,
                          layout=QtWidgets.QVBoxLayout(), spacing=0, margins=[0, 0, 0, 0],
-                         shape=QtWidgets.QFrame.StyledPanel, shadow=QtWidgets.QFrame.Sunken)
+                         shape=QtWidgets.QFrame.StyledPanel, shadow=QtWidgets.QFrame.Sunken,
+                         title_text="Obstacles", font_size=9)
+
+
+class XYFrame(MainFrame):
+    def __init__(self, parent, pos, width, height, color):
+        super().__init__(parent=parent, pos=pos, width=width, height=height, color=color,
+                         layout=QtWidgets.QVBoxLayout(), spacing=0, margins=[0, 0, 0, 0],
+                         shape=QtWidgets.QFrame.StyledPanel, shadow=QtWidgets.QFrame.Sunken,
+                         title_text="Wave function", font_size=9)
 
         # Top frame
         self.top_frame = CustomFrame(parent=self, pos=[0, 0], width=self.width, height=115, color='transparent',
@@ -191,11 +230,25 @@ class XYFrame(CustomFrame):
                                     height=self.height - self.top_frame.height)
 
 
-class ThetaFrame(CustomFrame):
+class DirectionalityFrame(MainFrame):
     def __init__(self, parent, pos, width, height, color):
         super().__init__(parent=parent, pos=pos, width=width, height=height, color=color,
                          layout=QtWidgets.QVBoxLayout(), spacing=0, margins=[0, 0, 0, 0],
-                         shape=QtWidgets.QFrame.StyledPanel, shadow=QtWidgets.QFrame.Sunken)
+                         shape=QtWidgets.QFrame.StyledPanel, shadow=QtWidgets.QFrame.Sunken,
+                         title_text="Directionality", font_size=9)
+
+        self.graph = myPlots1D.DirectionalityPlot(parent=self, plot_color='w', frame_color="transparent", line1_color='b',
+                                                  line2_color='r', axis_color='k', ticks_color='k', text_color='k',
+                                                  x_label="step", y_label="R")
+        self.layout().addWidget(self.graph)
+
+
+class ThetaFrame(MainFrame):
+    def __init__(self, parent, pos, width, height, color):
+        super().__init__(parent=parent, pos=pos, width=width, height=height, color=color,
+                         layout=QtWidgets.QVBoxLayout(), spacing=0, margins=[0, 0, 0, 0],
+                         shape=QtWidgets.QFrame.StyledPanel, shadow=QtWidgets.QFrame.Sunken,
+                         title_text="Polar plot", font_size=9)
 
         # Top frame
         self.top_frame = CustomFrame(parent=self, pos=[0, 0], width=self.width, height=75, color='transparent',
@@ -210,6 +263,9 @@ class ThetaFrame(CustomFrame):
                                       layout=QtWidgets.QHBoxLayout(), spacing=0, margins=[0, 0, 0, 0],
                                       shape=None, shadow=None)
         self.layout().addWidget(self.plot_frame)
+        # self.graph = myPolarPlots.PolarPlot(parent=self, plot_color='w', frame_color="transparent", line1_color='b',
+        #                                     line2_color='r', axis_color='k', ticks_color='k', text_color='k',
+        #                                     x_label="\u03B8 [rad]", y_label="J(\u03B8) [k]")
         self.graph = myPlots1D.ThetaPlot(parent=self, plot_color='w', frame_color="transparent", line1_color='b',
                                          line2_color='r', axis_color='k', ticks_color='k', text_color='k',
                                          x_label="\u03B8 [rad]", y_label="J(\u03B8) [k]")
@@ -222,11 +278,12 @@ class ThetaFrame(CustomFrame):
                                     height=self.height - self.top_frame.height)
 
 
-class ResFrame(CustomFrame):
+class ResFrame(MainFrame):
     def __init__(self, parent, pos, width, height, color):
         super().__init__(parent=parent, pos=pos, width=width, height=height, color=color,
                          layout=QtWidgets.QVBoxLayout(), spacing=0, margins=[0, 0, 0, 0],
-                         shape=QtWidgets.QFrame.StyledPanel, shadow=QtWidgets.QFrame.Sunken)
+                         shape=QtWidgets.QFrame.StyledPanel, shadow=QtWidgets.QFrame.Sunken,
+                         title_text="Resonances", font_size=9)
 
         # Top frame
         self.top_frame = CustomFrame(parent=self, pos=[0, 0], width=self.width, height=75,

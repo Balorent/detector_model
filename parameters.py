@@ -8,7 +8,7 @@
 # Import files
 
 #  Gas parameter
-N = 1
+N = 5
 radius = 5
 coordinates = []
 
@@ -31,7 +31,7 @@ y_min = -10
 y_max = 10
 
 #  theta plot parameters
-theta_res = 500
+theta_res = 5000
 
 #  res_plot parameters
 imk_res = 100

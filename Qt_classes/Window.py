@@ -27,7 +27,7 @@ class Window(QtWidgets.QMainWindow):
                          int((self.screen_height - self.height)/2),
                          self.width,
                          self.height)
-        self.padding = 5
+        self.padding = 2
 
         # Colors
         self.win_color = 'white'
@@ -35,29 +35,44 @@ class Window(QtWidgets.QMainWindow):
         self.setStyleSheet("background-color : " + self.win_color)
 
         # Option frame
-        self.option_height = 95
         self.option_frame = myFrames.OptionFrame(parent=self, pos=[self.padding, 0], width=self.width - 2*self.padding,
-                                                 height=self.option_height, color=self.frame_color)
+                                                 height=95, color=self.frame_color)
+
+        # Obstacles frame
+        self.obstacle_frame = myFrames.ObstacleFrame(parent=self,
+                                                     pos=[self.padding, self.option_frame.height + self.padding],
+                                                     width=200,
+                                                     height=self.height - self.option_frame.height - 2 * self.padding,
+                                                     color=self.frame_color)
 
         # XY frame
-        self.XY_frame = myFrames.XYFrame(parent=self, pos=[self.padding, self.option_frame.height + self.padding],
-                                         width=self.height - self.option_frame.height - 2*self.padding,
-                                         height=self.height - self.option_frame.height - 2*self.padding,
+        self.directionality_height = 200
+        self.XY_frame = myFrames.XYFrame(parent=self,
+                                         pos=[2*self.padding + self.obstacle_frame.width, self.option_frame.height + self.padding],
+                                         width=self.height - self.option_frame.height - 3*self.padding - self.directionality_height,
+                                         height=self.height - self.option_frame.height - 3*self.padding - self.directionality_height,
                                          color=self.frame_color)
+
+        # Directionality frame
+        self.directionality_frame = myFrames.DirectionalityFrame(parent=self,
+                                                                 pos=[2*self.padding + self.obstacle_frame.width, self.option_frame.height + 2*self.padding + self.height - self.option_frame.height - 3*self.padding - self.directionality_height],
+                                                                 width=self.height - self.option_frame.height - 3*self.padding - self.directionality_height,
+                                                                 height=self.directionality_height,
+                                                                 color=self.frame_color)
 
         # Theta frame
         self.Theta_frame = myFrames.ThetaFrame(parent=self,
-                                               pos=[self.XY_frame.width + 2*self.padding,
+                                               pos=[self.obstacle_frame.width + self.XY_frame.width + 3*self.padding,
                                                     self.option_frame.height + self.padding],
-                                               width=self.width - self.XY_frame.width - 3*self.padding,
+                                               width=self.width - self.XY_frame.width - self.obstacle_frame.width - 4*self.padding,
                                                height=int((self.height - self.option_frame.height - 3*self.padding)/2),
                                                color=self.frame_color)
 
         # Res frame
         self.Res_frame = myFrames.ResFrame(parent=self,
-                                           pos=[self.XY_frame.width + 2*self.padding,
+                                           pos=[self.obstacle_frame.width + self.XY_frame.width + 3*self.padding,
                                                 self.option_frame.height + self.Theta_frame.height + 2*self.padding],
-                                           width=self.width - self.XY_frame.width - 3*self.padding,
+                                           width=self.width - self.XY_frame.width - self.obstacle_frame.width - 4*self.padding,
                                            height=int((self.height - self.option_frame.height - 3*self.padding)/2),
                                            color=self.frame_color)
 
@@ -67,15 +82,23 @@ class Window(QtWidgets.QMainWindow):
     def resizeEvent(self, event):
         self.width = self.geometry().width()
         self.height = self.geometry().height()
-        self.option_frame.update_size(pos=[self.padding, 0], width=self.width - 2*self.padding, height=self.option_height)
-        self.XY_frame.update_size(pos=[self.padding, self.option_frame.height + self.padding],
-                                  width=self.height - self.option_frame.height - 2*self.padding,
-                                  height=self.height - self.option_frame.height - 2*self.padding)
-        self.Theta_frame.update_size(pos=[self.XY_frame.width + 2*self.padding,
+        self.option_frame.update_size(pos=[self.padding, 0],
+                                      width=self.width - 2*self.padding,
+                                      height=self.option_frame.height)
+        self.obstacle_frame.update_size(pos=[self.padding, self.option_frame.height + self.padding],
+                                        width=self.obstacle_frame.width,
+                                        height=self.height - self.option_frame.height - 2 * self.padding,)
+        self.XY_frame.update_size(pos=[2*self.padding + self.obstacle_frame.width, self.option_frame.height + self.padding],
+                                  width=self.height - self.option_frame.height - 3*self.padding - self.directionality_frame.height,
+                                  height=self.height - self.option_frame.height - 3*self.padding - self.directionality_frame.height)
+        self.directionality_frame.update_size(pos=[2*self.padding + self.obstacle_frame.width, self.option_frame.height + 2*self.padding + self.height - self.option_frame.height - 3*self.padding - self.directionality_height],
+                                              width=self.height - self.option_frame.height - 3*self.padding - self.directionality_frame.height,
+                                              height=self.directionality_frame.height)
+        self.Theta_frame.update_size(pos=[self.obstacle_frame.width + self.XY_frame.width + 3*self.padding,
                                           self.option_frame.height + self.padding],
-                                     width=self.width - self.XY_frame.width - 3*self.padding,
+                                     width=self.width - self.XY_frame.width - self.obstacle_frame.width - 4*self.padding,
                                      height=int((self.height - self.option_frame.height - 3*self.padding)/2))
-        self.Res_frame.update_size(pos=[self.XY_frame.width + 2*self.padding,
+        self.Res_frame.update_size(pos=[self.obstacle_frame.width + self.XY_frame.width + 3*self.padding,
                                         self.option_frame.height + self.Theta_frame.height + 2*self.padding],
-                                   width=self.width - self.XY_frame.width - 3*self.padding,
+                                   width=self.width - self.XY_frame.width - self.obstacle_frame.width - 4*self.padding,
                                    height=int((self.height - self.option_frame.height - 3*self.padding)/2))

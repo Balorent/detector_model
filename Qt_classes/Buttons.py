@@ -4,7 +4,7 @@ from PyQt5 import QtWidgets, QtCore
 
 
 class CustomButton(QtWidgets.QPushButton):
-    def __init__(self, parent, pos, width, height, text, color, hover_color):
+    def __init__(self, parent, pos, width, height, text, font_size, color, hover_color):
         super().__init__(parent=parent, text=text)
         self.parent = parent
 
@@ -17,4 +17,5 @@ class CustomButton(QtWidgets.QPushButton):
         self.setFixedHeight(self.height)
 
         # Colors
-        self.setStyleSheet('QPushButton {background-color: ' + color + '};')
+        self.setStyleSheet('QPushButton {background-color: ' + color + '; font-size:' + str(font_size) + 'pt;};')
+        # self.setStyleSheet('QPushButton:hover:!pressed{color: red;}')
